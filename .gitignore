@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Rust / Cargo
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Local data
+data/
+!data/.gitkeep
+
+# Config with secrets
+config/settings.json
+config/local.json
+
+# Keys and certificates
+keys/
+*.key
+*.pem
+*.crt
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+.DS_Store
