@@ -28,7 +28,10 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(log_record, ensure_ascii=False)
 
 class AuditLogger:
-    """Дополнительный логгер для аудита с цепочкой хешей."""
+    """Append-only audit log with hash chain for tamper evidence.
+    
+    Each entry contains previous hash, timestamp, event, payload, and current hash.
+    """
     def __init__(self, audit_file: Path):
         self.audit_file = audit_file
         self.audit_file.parent.mkdir(parents=True, exist_ok=True)
