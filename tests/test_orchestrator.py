@@ -3,6 +3,7 @@ import tempfile
 import sqlite3
 from pathlib import Path
 import pytest
+import sys
 
 
 @pytest.fixture
@@ -54,7 +55,20 @@ def test_cli_add_verify_list(setup_env):
         # add
         cmd = f"python core/orchestrator.py add {env['test_file']} --title 'Test' --author 'Tester'"
         result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True, cwd=Path.cwd()
+            [
+                sys.executable,
+                "-m",
+                "core.orchestrator",
+                "add",
+                str(env["test_file"]),
+                "--title",
+                "Test",
+                "--author",
+                "Tester",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=Path.cwd(),
         )
         assert result.returncode == 0, f"stderr: {result.stderr}"
 

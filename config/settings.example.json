@@ -1,13 +1,31 @@
 {
+  "logging": {
+    "level": "INFO",
+    "file": "logs/glyph.log"
+  },
+
   "storage": {
-    "data_dir": "data",
     "incoming_dir": "data/incoming",
     "archive_dir": "data/archive"
   },
+
   "metadata": {
     "database": "data/metadata.db"
   },
-  "logging": {
-    "level": "INFO"
+
+  "security": {
+    "hash_algo": "sha256",
+    "encryption": {
+      "enabled": false,
+      "algorithm": "aes-256-gcm",
+      "key_env_var": "GLYPH_ENC_KEY"
+    }
+  },
+
+  "modules": {
+    "crypto": {
+      "enabled": false,
+      "path": "modules/crypto_module.py"
+    }
   }
 }

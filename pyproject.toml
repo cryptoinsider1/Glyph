@@ -29,8 +29,10 @@ dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
     "pytest-asyncio>=0.23",
-    "sphinx>=7.0",
-    "sphinx-rtd-theme>=2.0",
+    "pytest-benchmark>=4.0,<5.0",
+    "bandit>=1.7,<2.0",
+    "pip-audit>=2.7,<3.0",
+    "pre-commit>=3.6,<4.0",
 ]
 
 [tool.pytest.ini_options]
@@ -43,3 +45,8 @@ pythonpath = ["."]
 [tool.bandit]
 exclude_dirs = ["tests", "scripts"]
 skips = ["B404", "B603"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "modules*"]
+exclude = ["data*", "logs*", "config*"]

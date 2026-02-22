@@ -9,7 +9,7 @@ import subprocess
 import time
 
 
-def test_load_add_files(benchmark):
+def test_load_add_files():
     # не идеально, но для демонстрации
     with tempfile.TemporaryDirectory() as tmpdir:
         # генерируем много маленьких файлов
