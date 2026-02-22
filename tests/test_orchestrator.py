@@ -52,10 +52,19 @@ def test_cli_add_verify_list(setup_env):
         json.dump(config, f, indent=2)
 
     try:
-        # add
-        cmd = ["python", "-m", "core.orchestrator", "list"]
+        # ADD
         result = subprocess.run(
-            cmd,
+            [
+                sys.executable,
+                "-m",
+                "core.orchestrator",
+                "add",
+                str(env["test_file"]),
+                "--title",
+                "Test",
+                "--author",
+                "Tester",
+            ],
             capture_output=True,
             text=True,
         )
@@ -86,7 +95,7 @@ def test_cli_add_verify_list(setup_env):
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0
+        assert result.returncode == 0, f"stderr: {result.stderr}"
 
         # list
         result = subprocess.run(
