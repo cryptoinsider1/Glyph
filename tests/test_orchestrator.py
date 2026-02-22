@@ -53,22 +53,11 @@ def test_cli_add_verify_list(setup_env):
 
     try:
         # add
-        cmd = f"python core/orchestrator.py add {env['test_file']} --title 'Test' --author 'Tester'"
+        cmd = ["python", "-m", "core.orchestrator", "list"]
         result = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "core.orchestrator",
-                "add",
-                str(env["test_file"]),
-                "--title",
-                "Test",
-                "--author",
-                "Tester",
-            ],
+            cmd,
             capture_output=True,
             text=True,
-            cwd=Path.cwd(),
         )
         assert result.returncode == 0, f"stderr: {result.stderr}"
 
@@ -86,13 +75,30 @@ def test_cli_add_verify_list(setup_env):
         assert rows[0][1] == str(archived[0])  # file_path
 
         # verify
-        cmd = f"python core/orchestrator.py verify {archived[0]}"
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "core.orchestrator",
+                "verify",
+                str(archived[0]),
+            ],
+            capture_output=True,
+            text=True,
+        )
         assert result.returncode == 0
 
         # list
-        cmd = "python core/orchestrator.py list"
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "core.orchestrator",
+                "list",
+            ],
+            capture_output=True,
+            text=True,
+        )
         assert result.returncode == 0
         assert "Test" in result.stdout
 

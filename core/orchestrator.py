@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import argparse
 import json
 import os
-import sqlite3
 import sys
 from pathlib import Path
 
@@ -13,251 +13,177 @@ from core.logger import AuditLogger, setup_logger
 from core.metadata_store import MetadataStore
 from core.remote import RemoteStorage
 
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+os.chdir(PROJECT_ROOT)
 
 
 # -------------------------
 # Config
 # -------------------------
 def load_config() -> dict:
-    config_path = PROJECT_ROOT / "config" / "settings.json"
-    if not config_path.exists():
+    cfg = PROJECT_ROOT / "config" / "settings.json"
+    if not cfg.exists():
         raise FileNotFoundError(
-            f"Config not found: {config_path}. "
-            f"Copy from config/settings.example.json"
+            f"Config not found: {cfg}. Copy from config/settings.example.json"
         )
-
-    with config_path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+    return json.loads(cfg.read_text(encoding="utf-8"))
 
 
 # -------------------------
 # CLI
 # -------------------------
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Glyph CLI")
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    parser = argparse.ArgumentParser(description="Glyph CLI v0.2.1")
+    sub = parser.add_subparsers(dest="command", required=True)
 
-    add_parser = subparsers.add_parser("add", help="Add a file")
-    add_parser.add_argument("file", help="Path to file")
-    add_parser.add_argument("--title", help="Title")
-    add_parser.add_argument("--author", help="Author")
-    add_parser.add_argument("--tags", help="Comma-separated tags")
-    add_parser.add_argument("--no-verify", action="store_true")
+    p_add = sub.add_parser("add", help="Add file")
+    p_add.add_argument("file")
+    p_add.add_argument("--title")
+    p_add.add_argument("--author")
+    p_add.add_argument("--tags")
+    p_add.add_argument("--no-verify", action="store_true")
 
-    verify_parser = subparsers.add_parser("verify", help="Verify file integrity")
-    verify_parser.add_argument("file", help="Path to file")
+    p_ver = sub.add_parser("verify", help="Verify integrity")
+    p_ver.add_argument("file", nargs="?")
+    p_ver.add_argument("--id", type=int)
+    p_ver.add_argument("--hash")
 
-    list_parser = subparsers.add_parser("list", help="List recent entries")
-    list_parser.add_argument("--limit", type=int, default=20)
+    p_list = sub.add_parser("list", help="List entries")
+    p_list.add_argument("--limit", type=int, default=20)
 
     return parser
+
+
+# -------------------------
+# Helpers
+# -------------------------
+def resolve_entry(store: MetadataStore, args) -> dict:
+    if args.id is not None:
+        entry = store.get_entry_by_id(args.id)
+    elif args.hash:
+        entry = store.get_entry_by_hash(args.hash)
+    elif args.file:
+        path = Path(args.file).expanduser().resolve()
+        entry = store.get_entry_by_path(str(path))
+    else:
+        raise ValueError("Specify --id, --hash or file path")
+
+    if not entry:
+        raise LookupError("Entry not found")
+    return entry
 
 
 # -------------------------
 # Main
 # -------------------------
 def main() -> None:
-    # 🔒 Enforce project root as working directory
-    os.chdir(PROJECT_ROOT)
     try:
         config = load_config()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"FATAL: Cannot load config: {exc}")
         sys.exit(1)
 
     logger = setup_logger(config)
     audit = AuditLogger(Path("logs/audit.jsonl"))
 
-    try:
-        store = MetadataStore(
-            db_path=config["metadata"]["database"],
-            logger=logger,
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.error(f"Metadata store init failed: {exc}")
-        sys.exit(1)
+    store = MetadataStore(
+        db_path=config["metadata"]["database"],
+        logger=logger,
+    )
 
-    remote = RemoteStorage(config["storage"], logger=logger)
+    remote = RemoteStorage(config["storage"], logger)
 
-    crypto_ipc: ModuleIPC | None = None
+    crypto_ipc = None
     crypto_cfg = config.get("modules", {}).get("crypto", {})
     if crypto_cfg.get("enabled"):
-        crypto_path = PROJECT_ROOT / crypto_cfg["path"]
-        try:
-            crypto_ipc = ModuleIPC(crypto_path, logger=logger)
-        except Exception as exc:  # noqa: BLE001
-            logger.error(f"Crypto module init failed: {exc}")
-            sys.exit(1)
+        crypto_ipc = ModuleIPC(
+            PROJECT_ROOT / crypto_cfg["path"],
+            logger=logger,
+        )
 
-    parser = build_parser()
-    args = parser.parse_args()
+    args = build_parser().parse_args()
 
     # -------------------------
     # ADD
     # -------------------------
     if args.command == "add":
-        file_path = Path(args.file).expanduser().resolve()
-        if not file_path.is_file():
-            logger.error(f"File not found: {file_path}")
+        src = Path(args.file).expanduser().resolve()
+        if not src.is_file():
+            logger.error(f"File not found: {src}")
             sys.exit(1)
 
-        logger.info(f"Adding file: {file_path}")
-
-        # Hash
-        if crypto_ipc:
-            data = file_path.read_bytes()
-            resp = crypto_ipc.call(
-                {
-                    "cmd": "hash",
-                    "data": data.hex(),
-                    "algorithm": config["security"]["hash_algo"],
-                }
-            )
-            if "error" in resp:
-                logger.error(resp["error"])
-                sys.exit(1)
-            file_hash = resp["result"]
-        else:
-            file_hash = calculate_hash(
-                file_path,
-                algorithm=config["security"]["hash_algo"],
-                logger=logger,
-            )
+        algo = config["security"]["hash_algo"]
+        file_hash = (
+            crypto_ipc.hash_file(src, algo)
+            if crypto_ipc
+            else calculate_hash(src, algo, logger)
+        )
 
         if store.get_entry_by_hash(file_hash):
-            logger.warning("Duplicate file detected")
+            logger.error("Duplicate file (hash exists)")
             sys.exit(1)
 
-        metadata = {
-            "title": args.title or file_path.stem,
+        archive = Path(config["storage"]["archive_dir"])
+        archive.mkdir(parents=True, exist_ok=True)
+        dst = archive / src.name
+
+        copy_file_with_verify(src, dst, not args.no_verify, logger)
+
+        meta = {
+            "title": args.title or src.stem,
             "author": args.author or "Unknown",
             "tags": args.tags.split(",") if args.tags else [],
-            "original_filename": file_path.name,
-            "size_bytes": file_path.stat().st_size,
+            "original_filename": src.name,
+            "size_bytes": src.stat().st_size,
         }
 
-        archive_dir = Path(config["storage"]["archive_dir"])
-        archive_dir.mkdir(parents=True, exist_ok=True)
+        remote.send_file(dst)
+        entry_id = store.add_entry(str(dst), file_hash, meta)
 
-        archive_path = archive_dir / file_path.name
-        counter = 1
-        while archive_path.exists():
-            archive_path = archive_dir / f"{file_path.stem}_{counter}{file_path.suffix}"
-            counter += 1
-
-        try:
-            copy_file_with_verify(
-                file_path,
-                archive_path,
-                verify=not args.no_verify,
-                logger=logger,
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.error(f"Copy failed: {exc}")
-            sys.exit(1)
-
-        # Encryption
-        enc_cfg = config["security"]["encryption"]
-        if enc_cfg["enabled"] and crypto_ipc:
-            key = os.environ.get(enc_cfg["key_env_var"])
-            if not key:
-                logger.error("Encryption key env var not set")
-                sys.exit(1)
-
-            data = archive_path.read_bytes()
-            resp = crypto_ipc.call(
-                {
-                    "cmd": "encrypt",
-                    "data": data.hex(),
-                    "key": key,
-                    "algorithm": enc_cfg["algorithm"],
-                }
-            )
-            if "error" in resp:
-                logger.error(resp["error"])
-                sys.exit(1)
-
-            encrypted_path = archive_path.with_suffix(archive_path.suffix + ".enc")
-            encrypted_path.write_bytes(bytes.fromhex(resp["result"]))
-            archive_path.unlink()
-            archive_path = encrypted_path
-
-        remote.send_file(archive_path)
-
-        try:
-            entry_id = store.add_entry(
-                str(archive_path),
-                file_hash,
-                metadata,
-            )
-        except sqlite3.IntegrityError:
-            logger.error("Database integrity error")
-            sys.exit(1)
-
-        audit.log(
-            "file_added",
-            {"file": str(archive_path), "hash": file_hash, "id": entry_id},
-        )
+        audit.log("file_added", {"id": entry_id, "hash": file_hash})
         logger.info(f"✅ Entry added with ID {entry_id}")
 
     # -------------------------
-    # VERIFY
+    # VERIFY++
     # -------------------------
     elif args.command == "verify":
-        file_path = Path(args.file).expanduser().resolve()
-        entry = store.get_entry_by_path(str(file_path))
-        if not entry:
-            logger.error("Entry not found")
+        try:
+            entry = resolve_entry(store, args)
+        except Exception as exc:
+            logger.error(str(exc))
             sys.exit(1)
 
-        if crypto_ipc:
-            data = file_path.read_bytes()
-            resp = crypto_ipc.call(
-                {
-                    "cmd": "hash",
-                    "data": data.hex(),
-                    "algorithm": config["security"]["hash_algo"],
-                }
-            )
-            current_hash = resp["result"]
-        else:
-            current_hash = calculate_hash(
-                file_path,
-                algorithm=config["security"]["hash_algo"],
-                logger=logger,
-            )
+        path = Path(entry["file_path"])
+        algo = config["security"]["hash_algo"]
+        current = (
+            crypto_ipc.hash_file(path, algo)
+            if crypto_ipc
+            else calculate_hash(path, algo, logger)
+        )
 
-        ok = current_hash == entry["hash"]
-        store.update_verification(str(file_path), ok)
+        ok = current == entry["hash"]
+        store.update_verification(entry["file_path"], ok)
 
         audit.log(
             "verify",
-            {
-                "file": str(file_path),
-                "expected": entry["hash"],
-                "actual": current_hash,
-                "ok": ok,
-            },
+            {"id": entry["id"], "ok": ok},
         )
 
         if ok:
             logger.info("✅ Integrity verified")
         else:
-            logger.error("❌ Integrity failed")
+            logger.error("❌ Integrity FAILED")
             sys.exit(1)
 
     # -------------------------
     # LIST
     # -------------------------
     elif args.command == "list":
-        entries = store.list_entries(limit=args.limit)
-        for e in entries:
-            status = "✅" if e["verified"] else "❌"
+        for e in store.list_entries(args.limit):
+            mark = "✅" if e["verified"] else "❌"
             print(
-                f"{status} ID={e['id']} "
-                f"{e['metadata'].get('title', '')} "
-                f"({e['file_path']})"
+                f"{mark} ID={e['id']} {e['metadata'].get('title','')} ({e['file_path']})"
             )
 
 
