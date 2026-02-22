@@ -1,26 +1,39 @@
 {
+  "project": {
+    "name": "Glyph",
+    "version": "0.1.0-alpha"
+  },
   "storage": {
-    "local_incoming": "./data/incoming",
-    "local_processed": "./data/processed",
-    "remote_enabled": false,
-    "remote_host": "raspberrypi.local",
-    "remote_user": "pi",
-    "remote_path": "/mnt/encrypted_archive/",
-    "remote_key": "~/.ssh/id_rsa_glyph"
+    "incoming_dir": "./data/incoming",
+    "archive_dir": "./data/archive",
+    "use_remote": false,
+    "remote": {
+      "host": "raspberrypi.local",
+      "user": "pi",
+      "path": "/mnt/encrypted_archive/",
+      "ssh_key": "~/.ssh/id_rsa_glyph"
+    }
+  },
+  "metadata": {
+    "database": "./data/metadata.db",
+    "backend": "sqlite"
   },
   "logging": {
     "level": "DEBUG",
     "file": "./logs/glyph.log",
     "json_format": true
   },
-  "encryption": {
-    "algorithm": "aes-256-cbc",
-    "key_env_var": "GLYPH_ENCRYPTION_KEY"
+  "security": {
+    "hash_algo": "sha256",
+    "encryption": {
+      "enabled": false,
+      "algorithm": "aes-256-cbc",
+      "key_env_var": "GLYPH_MASTER_KEY"
+    }
   },
   "ai": {
-    "openai_api_key_env": "OPENAI_API_KEY",
-    "deepseek_api_key_env": "DEEPSEEK_API_KEY",
-    "default_model": "gpt-3.5-turbo",
-    "enabled": false
+    "enabled": false,
+    "openai_key_env": "OPENAI_API_KEY",
+    "default_model": "gpt-3.5-turbo"
   }
 }
