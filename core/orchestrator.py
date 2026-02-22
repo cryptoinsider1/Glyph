@@ -58,6 +58,8 @@ def build_parser() -> argparse.ArgumentParser:
 # Main
 # -------------------------
 def main() -> None:
+    # 🔒 Enforce project root as working directory
+    os.chdir(PROJECT_ROOT)
     try:
         config = load_config()
     except Exception as exc:  # noqa: BLE001
