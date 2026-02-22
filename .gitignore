@@ -1,48 +1,77 @@
-# Byte-compiled / optimized / DLL files
+# ======================================
+# Python bytecode / cache
+# ======================================
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# C extensions
-*.so
-
-# Rust / Cargo
-target/
-**/*.rs.bk
-Cargo.lock
-
-# Distribution / packaging
+# ======================================
+# Python virtual environments
+# ======================================
 .Python
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# ======================================
+# Packaging / build artifacts
+# ======================================
 *.egg-info/
 dist/
 build/
+
+# ======================================
+# Rust / Cargo
+# ======================================
+target/
+**/*.rs.bk
+# Cargo.lock:
+# 👉 для библиотек можно игнорировать, для бинарников — лучше коммитить
+Cargo.lock
+
+# ======================================
+# Environment / secrets
+# ======================================
 .env
+.env.*
 .env.local
 
+# ======================================
 # Logs
+# ======================================
 logs/
 *.log
 
-# Local data
+# ======================================
+# Local runtime data
+# ======================================
 data/
 !data/.gitkeep
 
-# Config with secrets
+# ======================================
+# Configs with secrets
+# ======================================
 config/settings.json
 config/local.json
 
-# Keys and certificates
+# ======================================
+# Keys / certificates
+# ======================================
 keys/
 *.key
 *.pem
 *.crt
 
-# IDEs
+# ======================================
+# IDEs / OS
+# ======================================
 .vscode/
 .idea/
 *.swp

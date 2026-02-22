@@ -9,57 +9,61 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.11", "3.12"]
+
     steps:
-      - uses: actions/checkout@v4
-      
+      # 1. Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Rust
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
-          
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          
+
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "modules/crypto_rust"
-          
-      - name: Build Rust module
-        run: make build
-        
+
+      # 3. Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 4. Install Python deps
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
-          # Если есть requirements.txt для AI-модуля:
-          # pip install -r modules/ai_python/requirements.txt
-          
-      - name: Run tests
-        run: make test
-        
-      - name: Run linters (if available)
-        run: |
-          # pip install flake8 black mypy
-          # flake8 core/ tests/
-          # black --check core/ tests/
+          pip install -r requirements.txt
 
-      - name: Install dependencies
+      # 5. Build Rust module
+      - name: Build Rust crypto module
         run: |
-          pip install pytest pip-audit
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          cd modules/crypto_rust
+          cargo build --release
+          cd ../..
 
+      # 6. Python security audit
       - name: Security audit (pip-audit)
         run: |
           pip-audit -r requirements.txt --desc on
-          
+
+      # 7. Rust security audit
       - name: Install cargo-audit
         run: cargo install cargo-audit
 
       - name: Run cargo audit
-        run: cd modules/crypto_rust && cargo audit
+        run: |
+          cd modules/crypto_rust
+          cargo audit
+
+      # 8. Run tests
+      - name: Run tests
+        run: |
+          pytest tests/ -v
