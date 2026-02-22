@@ -50,3 +50,6 @@ skips = ["B404", "B603"]
 where = ["."]
 include = ["core*", "modules*"]
 exclude = ["data*", "logs*", "config*"]
+
+[project.scripts]
+glyph = "core.orchestrator:main"

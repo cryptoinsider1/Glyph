@@ -6,7 +6,11 @@
 
   "storage": {
     "incoming_dir": "data/incoming",
-    "archive_dir": "data/archive"
+    "archive_dir": "data/archive",
+    "remote": {
+      "enabled": false,
+      "type": "none"
+    }
   },
 
   "metadata": {
@@ -25,7 +29,7 @@
   "modules": {
     "crypto": {
       "enabled": false,
-      "path": "modules/crypto_module.py"
+      "path": "modules/crypto_rust/crypto_module"
     }
   }
 }
