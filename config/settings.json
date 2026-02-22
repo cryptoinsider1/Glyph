@@ -1,0 +1,26 @@
+{
+  "storage": {
+    "local_incoming": "./data/incoming",
+    "local_processed": "./data/processed",
+    "remote_enabled": false,
+    "remote_host": "raspberrypi.local",
+    "remote_user": "pi",
+    "remote_path": "/mnt/encrypted_archive/",
+    "remote_key": "~/.ssh/id_rsa_glyph"
+  },
+  "logging": {
+    "level": "DEBUG",
+    "file": "./logs/glyph.log",
+    "json_format": true
+  },
+  "encryption": {
+    "algorithm": "aes-256-cbc",
+    "key_env_var": "GLYPH_ENCRYPTION_KEY"
+  },
+  "ai": {
+    "openai_api_key_env": "OPENAI_API_KEY",
+    "deepseek_api_key_env": "DEEPSEEK_API_KEY",
+    "default_model": "gpt-3.5-turbo",
+    "enabled": false
+  }
+}
