@@ -23,6 +23,12 @@
     "file": "./logs/glyph.log",
     "json_format": true
   },
+  "modules": {
+    "crypto": {
+        "path": "./modules/crypto_rust/target/release/crypto_rust",
+        "enabled": true
+    }
+  },
   "security": {
     "hash_algo": "sha256",
     "encryption": {

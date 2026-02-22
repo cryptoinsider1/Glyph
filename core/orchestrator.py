@@ -15,7 +15,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from core.logger import setup_logger, AuditLogger
 from core.metadata_store import MetadataStore
 from core.ipc import ModuleIPC
-from core.remote import RemoteStorage
+from core import RemoteStorage
 
 def load_config():
     config_path = PROJECT_ROOT / "config" / "settings.json"
