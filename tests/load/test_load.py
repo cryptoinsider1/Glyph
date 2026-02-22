@@ -2,10 +2,12 @@
 Простой нагрузочный тест: многократное добавление файлов.
 Запуск: pytest tests/load/test_load.py -s --count=100
 """
+
+from pathlib import Path
 import tempfile
 import subprocess
 import time
-import pytest
+
 
 def test_load_add_files(benchmark):
     # не идеально, но для демонстрации
@@ -20,6 +22,8 @@ def test_load_add_files(benchmark):
         # замеряем время добавления
         start = time.time()
         for f in file_paths:
-            subprocess.run(f"python core/orchestrator.py add {f}", shell=True, capture_output=True)
+            subprocess.run(
+                f"python core/orchestrator.py add {f}", shell=True, capture_output=True
+            )
         duration = time.time() - start
         print(f"\nAdded 100 files in {duration:.2f} seconds")

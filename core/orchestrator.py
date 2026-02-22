@@ -1,28 +1,29 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import os
-import sys
+import sqlite3
 import argparse
 import json
+import sys
 from pathlib import Path
-import sqlite3
-
-# Добавляем путь к проекту для импортов
-PROJECT_ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 from core.logger import setup_logger, AuditLogger
-from core.metadata_store import MetadataStore
+from core.remote import RemoteStorage
 from core.ipc import ModuleIPC
-from core import RemoteStorage
+from core.metadata_store import MetadataStore
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
 
 def load_config():
     config_path = PROJECT_ROOT / "config" / "settings.json"
     if not config_path.exists():
-        raise FileNotFoundError(f"Config not found: {config_path}. Copy from settings.example.json")
-    with open(config_path, 'r', encoding='utf-8') as f:
+        raise FileNotFoundError(
+            f"Config not found: {config_path}. Copy from settings.example.json"
+        )
+    with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def main():
     try:
@@ -63,7 +64,9 @@ def main():
     add_parser.add_argument("--title", help="Title")
     add_parser.add_argument("--author", help="Author")
     add_parser.add_argument("--tags", help="Comma-separated tags")
-    add_parser.add_argument("--no-verify", action="store_true", help="Skip copy verification")
+    add_parser.add_argument(
+        "--no-verify", action="store_true", help="Skip copy verification"
+    )
 
     # verify
     verify_parser = subparsers.add_parser("verify", help="Verify file integrity")
@@ -88,7 +91,11 @@ def main():
             try:
                 with open(file_path, "rb") as f:
                     data = f.read()
-                req = {"cmd": "hash", "data": data.hex(), "algorithm": config["security"]["hash_algo"]}
+                req = {
+                    "cmd": "hash",
+                    "data": data.hex(),
+                    "algorithm": config["security"]["hash_algo"],
+                }
                 resp = crypto_ipc.call(req)
                 if "error" in resp:
                     logger.error(f"Crypto module error: {resp['error']}")
@@ -100,7 +107,10 @@ def main():
         else:
             # fallback на встроенную функцию (но мы хотим использовать внешний модуль)
             from core.file_handler import calculate_hash
-            file_hash = calculate_hash(file_path, algorithm=config["security"]["hash_algo"], logger=logger)
+
+            file_hash = calculate_hash(
+                file_path, algorithm=config["security"]["hash_algo"], logger=logger
+            )
 
         existing = store.get_entry_by_hash(file_hash)
         if existing:
@@ -130,8 +140,11 @@ def main():
 
         # Копирование с проверкой
         from core.file_handler import copy_file_with_verify
+
         try:
-            copy_file_with_verify(file_path, archive_path, verify=not args.no_verify, logger=logger)
+            copy_file_with_verify(
+                file_path, archive_path, verify=not args.no_verify, logger=logger
+            )
         except Exception as e:
             logger.error(f"Copy failed: {e}")
             sys.exit(1)
@@ -141,12 +154,19 @@ def main():
             enc_config = config["security"]["encryption"]
             key = os.environ.get(enc_config["key_env_var"])
             if not key:
-                logger.error(f"Encryption enabled but env var {enc_config['key_env_var']} not set")
+                logger.error(
+                    f"Encryption enabled but env var {enc_config['key_env_var']} not set"
+                )
                 sys.exit(1)
             try:
                 with open(archive_path, "rb") as f:
                     data = f.read()
-                req = {"cmd": "encrypt", "data": data.hex(), "key": key, "algorithm": enc_config["algorithm"]}
+                req = {
+                    "cmd": "encrypt",
+                    "data": data.hex(),
+                    "key": key,
+                    "algorithm": enc_config["algorithm"],
+                }
                 resp = crypto_ipc.call(req)
                 if "error" in resp:
                     logger.error(f"Encryption error: {resp['error']}")
@@ -168,7 +188,10 @@ def main():
         try:
             entry_id = store.add_entry(str(archive_path), file_hash, metadata)
             logger.info(f"✅ Entry added with ID {entry_id}")
-            audit.log("file_added", {"file": str(archive_path), "hash": file_hash, "id": entry_id})
+            audit.log(
+                "file_added",
+                {"file": str(archive_path), "hash": file_hash, "id": entry_id},
+            )
         except sqlite3.IntegrityError:
             logger.error("Database integrity error")
             sys.exit(1)
@@ -189,7 +212,11 @@ def main():
             try:
                 with open(file_path, "rb") as f:
                     data = f.read()
-                req = {"cmd": "hash", "data": data.hex(), "algorithm": config["security"]["hash_algo"]}
+                req = {
+                    "cmd": "hash",
+                    "data": data.hex(),
+                    "algorithm": config["security"]["hash_algo"],
+                }
                 resp = crypto_ipc.call(req)
                 if "error" in resp:
                     logger.error(f"Crypto module error: {resp['error']}")
@@ -200,7 +227,10 @@ def main():
                 sys.exit(1)
         else:
             from core.file_handler import calculate_hash
-            current_hash = calculate_hash(file_path, algorithm=config["security"]["hash_algo"], logger=logger)
+
+            current_hash = calculate_hash(
+                file_path, algorithm=config["security"]["hash_algo"], logger=logger
+            )
 
         if current_hash == entry["hash"]:
             logger.info("✅ Integrity verified")
@@ -209,7 +239,14 @@ def main():
         else:
             logger.error("❌ Integrity check failed")
             store.update_verification(str(file_path), False)
-            audit.log("verify_failed", {"file": str(file_path), "expected": entry["hash"], "actual": current_hash})
+            audit.log(
+                "verify_failed",
+                {
+                    "file": str(file_path),
+                    "expected": entry["hash"],
+                    "actual": current_hash,
+                },
+            )
             sys.exit(1)
 
     elif args.command == "list":
@@ -228,6 +265,7 @@ def main():
 
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()

@@ -4,11 +4,15 @@
 import subprocess
 import os
 from pathlib import Path
-from typing import Optional
 
 
-def encrypt_file(input_path: Path, output_path: Path, key: str,
-                 algorithm: str = "aes-256-cbc", logger=None) -> Path:
+def encrypt_file(
+    input_path: Path,
+    output_path: Path,
+    key: str,
+    algorithm: str = "aes-256-cbc",
+    logger=None,
+) -> Path:
     """
     Шифрует файл с помощью openssl.
     Требует наличия openssl в системе.
@@ -20,11 +24,16 @@ def encrypt_file(input_path: Path, output_path: Path, key: str,
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     cmd = [
-        "openssl", "enc", f"-{algorithm}",
+        "openssl",
+        "enc",
+        f"-{algorithm}",
         "-salt",
-        "-in", str(input_path),
-        "-out", str(output_path),
-        "-pass", f"pass:{key}"
+        "-in",
+        str(input_path),
+        "-out",
+        str(output_path),
+        "-pass",
+        f"pass:{key}",
     ]
 
     if logger:
@@ -42,11 +51,18 @@ def encrypt_file(input_path: Path, output_path: Path, key: str,
         return output_path
     except FileNotFoundError:
         # openssl не найден
-        raise RuntimeError("OpenSSL не найден в системе. Установите openssl или проверьте PATH.")
+        raise RuntimeError(
+            "OpenSSL не найден в системе. Установите openssl или проверьте PATH."
+        )
 
 
-def decrypt_file(input_path: Path, output_path: Path, key: str,
-                 algorithm: str = "aes-256-cbc", logger=None) -> Path:
+def decrypt_file(
+    input_path: Path,
+    output_path: Path,
+    key: str,
+    algorithm: str = "aes-256-cbc",
+    logger=None,
+) -> Path:
     """
     Дешифрует файл.
     """
@@ -56,10 +72,16 @@ def decrypt_file(input_path: Path, output_path: Path, key: str,
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     cmd = [
-        "openssl", "enc", "-d", f"-{algorithm}",
-        "-in", str(input_path),
-        "-out", str(output_path),
-        "-pass", f"pass:{key}"
+        "openssl",
+        "enc",
+        "-d",
+        f"-{algorithm}",
+        "-in",
+        str(input_path),
+        "-out",
+        str(output_path),
+        "-pass",
+        f"pass:{key}",
     ]
 
     if logger:
@@ -82,5 +104,5 @@ def decrypt_file(input_path: Path, output_path: Path, key: str,
 def generate_key() -> str:
     """Генерирует случайный ключ (пароль) для шифрования."""
     import base64
-    import os
+
     return base64.urlsafe_b64encode(os.urandom(32)).decode()

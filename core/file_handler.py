@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
-import os
 import shutil
 from pathlib import Path
 from typing import Union
@@ -11,7 +10,9 @@ from typing import Union
 # Мы не создаем логгер здесь, чтобы не плодить сущности
 
 
-def calculate_hash(file_path: Union[str, Path], algorithm: str = 'sha256', logger=None) -> str:
+def calculate_hash(
+    file_path: Union[str, Path], algorithm: str = "sha256", logger=None
+) -> str:
     """
     Вычисляет хеш файла, читая его блоками (эффективно для больших файлов).
     """
@@ -21,8 +22,8 @@ def calculate_hash(file_path: Union[str, Path], algorithm: str = 'sha256', logge
 
     hash_func = hashlib.new(algorithm)
     try:
-        with open(file_path, 'rb') as f:
-            for chunk in iter(lambda: f.read(65536), b''):  # 64KB блоки
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):  # 64KB блоки
                 hash_func.update(chunk)
     except Exception as e:
         if logger:
@@ -35,8 +36,9 @@ def calculate_hash(file_path: Union[str, Path], algorithm: str = 'sha256', logge
     return digest
 
 
-def copy_file_with_verify(src: Union[str, Path], dst: Union[str, Path],
-                          verify: bool = True, logger=None) -> Path:
+def copy_file_with_verify(
+    src: Union[str, Path], dst: Union[str, Path], verify: bool = True, logger=None
+) -> Path:
     """
     Копирует файл и опционально проверяет целостность по хешу.
     Возвращает путь к новому файлу.
@@ -77,8 +79,9 @@ def copy_file_with_verify(src: Union[str, Path], dst: Union[str, Path],
     return dst
 
 
-def move_file_with_verify(src: Union[str, Path], dst: Union[str, Path],
-                          verify: bool = True, logger=None) -> Path:
+def move_file_with_verify(
+    src: Union[str, Path], dst: Union[str, Path], verify: bool = True, logger=None
+) -> Path:
     """Перемещает файл с проверкой (копирование + удаление источника)."""
     dst_path = copy_file_with_verify(src, dst, verify, logger)
     # Удаляем исходный файл

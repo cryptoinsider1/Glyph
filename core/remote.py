@@ -4,6 +4,7 @@
 from pathlib import Path
 from typing import Optional
 
+
 class RemoteStorage:
     def __init__(self, config: dict, logger=None):
         self.config = config

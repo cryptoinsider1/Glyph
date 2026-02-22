@@ -4,15 +4,17 @@
 import json
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
+
 
 class ModuleIPC:
     """Client for calling external modules via JSON over stdin/stdout.
-    
+
     Args:
         module_path (Path): Path to the executable.
         logger (logging.Logger, optional): Logger instance.
     """
+
     def __init__(self, module_path: Path, logger=None):
         self.module_path = module_path.resolve()
         if not self.module_path.exists():
@@ -24,8 +26,10 @@ class ModuleIPC:
     def call(self, request: Dict[str, Any], timeout: int = 30) -> Dict[str, Any]:
         """Отправляет JSON-запрос модулю, возвращает JSON-ответ."""
         data = json.dumps(request)
-        if len(data.encode()) > MAX_IPC_SIZE:
-        raise ValueError(f"IPC payload too large: {len(data)} > {MAX_IPC_SIZE}")
+        if len(data.encode()) > self.MAX_IPC_SIZE:
+            raise ValueError(
+                f"IPC payload too large: {len(data)} > {self.MAX_IPC_SIZE}"
+            )
         if self.logger:
             self.logger.debug(f"IPC call to {self.module_path}: {request}")
         try:
@@ -34,7 +38,7 @@ class ModuleIPC:
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
             )
             stdout, stderr = proc.communicate(json.dumps(request), timeout=timeout)
         except subprocess.TimeoutExpired:

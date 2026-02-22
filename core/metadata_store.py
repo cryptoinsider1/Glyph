@@ -24,7 +24,8 @@ class MetadataStore:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         conn = self._get_conn()
         try:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS books (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     file_path TEXT NOT NULL UNIQUE,
@@ -34,7 +35,8 @@ class MetadataStore:
                     verified INTEGER DEFAULT 1,
                     last_checked TEXT
                 )
-            """)
+            """
+            )
             conn.commit()
             if self.logger:
                 self.logger.debug("Таблица metadata инициализирована.")
@@ -51,8 +53,9 @@ class MetadataStore:
         conn.row_factory = sqlite3.Row  # Позволяет обращаться по имени колонки
         return conn
 
-    def add_entry(self, file_path: str, file_hash: str,
-                  metadata: Dict[str, Any]) -> int:
+    def add_entry(
+        self, file_path: str, file_hash: str, metadata: Dict[str, Any]
+    ) -> int:
         """
         Добавляет новую запись. Возвращает ID записи.
         """
@@ -61,10 +64,13 @@ class MetadataStore:
 
         conn = self._get_conn()
         try:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 INSERT INTO books (file_path, hash, metadata, added, verified, last_checked)
                 VALUES (?, ?, ?, ?, 1, ?)
-            """, (file_path, file_hash, metadata_json, added_iso, added_iso))
+            """,
+                (file_path, file_hash, metadata_json, added_iso, added_iso),
+            )
             conn.commit()
             new_id = cursor.lastrowid
             if self.logger:
@@ -81,7 +87,9 @@ class MetadataStore:
         """Возвращает запись по пути файла или None."""
         conn = self._get_conn()
         try:
-            row = conn.execute("SELECT * FROM books WHERE file_path = ?", (file_path,)).fetchone()
+            row = conn.execute(
+                "SELECT * FROM books WHERE file_path = ?", (file_path,)
+            ).fetchone()
             if row:
                 # Преобразуем sqlite3.Row в dict
                 entry = dict(row)
@@ -96,7 +104,9 @@ class MetadataStore:
         """Возвращает запись по хешу."""
         conn = self._get_conn()
         try:
-            row = conn.execute("SELECT * FROM books WHERE hash = ?", (file_hash,)).fetchone()
+            row = conn.execute(
+                "SELECT * FROM books WHERE hash = ?", (file_hash,)
+            ).fetchone()
             if row:
                 entry = dict(row)
                 entry["metadata"] = json.loads(entry["metadata"])
@@ -111,14 +121,19 @@ class MetadataStore:
         checked_iso = datetime.utcnow().isoformat() + "Z"
         verified_int = 1 if verified else 0
         try:
-            conn.execute("""
+            conn.execute(
+                """
                 UPDATE books
                 SET verified = ?, last_checked = ?
                 WHERE file_path = ?
-            """, (verified_int, checked_iso, file_path))
+            """,
+                (verified_int, checked_iso, file_path),
+            )
             conn.commit()
             if self.logger:
-                self.logger.debug(f"Статус верификации для {file_path} обновлен: verified={verified}")
+                self.logger.debug(
+                    f"Статус верификации для {file_path} обновлен: verified={verified}"
+                )
         except sqlite3.Error as e:
             if self.logger:
                 self.logger.error(f"Ошибка обновления верификации: {e}")
@@ -130,7 +145,9 @@ class MetadataStore:
         """Возвращает список последних записей."""
         conn = self._get_conn()
         try:
-            rows = conn.execute("SELECT * FROM books ORDER BY added DESC LIMIT ?", (limit,)).fetchall()
+            rows = conn.execute(
+                "SELECT * FROM books ORDER BY added DESC LIMIT ?", (limit,)
+            ).fetchall()
             entries = []
             for row in rows:
                 entry = dict(row)
@@ -139,4 +156,3 @@ class MetadataStore:
             return entries
         finally:
             conn.close()
-            

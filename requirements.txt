@@ -10,7 +10,7 @@ python-dotenv>=1.0.1,<2.0
 # ======================
 # Crypto (Python-side)
 # ======================
-cryptography>=42.0.5,<46.0.5
+cryptography>=46.0.5,<47
 
 # ======================
 # Async / IPC
@@ -23,6 +23,7 @@ tenacity>=8.3,<9.0
 # ======================
 pytest>=8.2,<9.0
 pytest-cov>=5.0,<6.0
+pytest-benchmark>=4.0
 
 # ======================
 # Security / Audit

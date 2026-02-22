@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 import pytest
 
+
 @pytest.fixture
 def setup_env():
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -26,6 +27,7 @@ def setup_env():
             "test_file": test_file,
         }
 
+
 def test_cli_add_verify_list(setup_env):
     env = setup_env
     # подменяем конфиг или используем переменные окружения / проще запустить с реальным конфигом, но нужно временно переопределить пути.
@@ -38,6 +40,7 @@ def test_cli_add_verify_list(setup_env):
         config_dst.unlink()
     # читаем пример и заменяем пути
     import json
+
     with open(config_src) as f:
         config = json.load(f)
     config["storage"]["incoming_dir"] = str(env["incoming"])
@@ -50,7 +53,9 @@ def test_cli_add_verify_list(setup_env):
     try:
         # add
         cmd = f"python core/orchestrator.py add {env['test_file']} --title 'Test' --author 'Tester'"
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=Path.cwd())
+        result = subprocess.run(
+            cmd, shell=True, capture_output=True, text=True, cwd=Path.cwd()
+        )
         assert result.returncode == 0, f"stderr: {result.stderr}"
 
         # Проверим, что файл скопирован в архив

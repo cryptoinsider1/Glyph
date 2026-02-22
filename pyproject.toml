@@ -38,3 +38,8 @@ minversion = "8.0"
 testpaths = ["tests"]
 python_files = "test_*.py"
 addopts = "-v --cov=core --cov-report=term-missing"
+pythonpath = ["."]
+
+[tool.bandit]
+exclude_dirs = ["tests", "scripts"]
+skips = ["B404", "B603"]

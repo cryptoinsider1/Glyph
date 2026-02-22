@@ -1,0 +1,13 @@
+{
+  "storage": {
+    "data_dir": "data",
+    "incoming_dir": "data/incoming",
+    "archive_dir": "data/archive"
+  },
+  "metadata": {
+    "database": "data/metadata.db"
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}

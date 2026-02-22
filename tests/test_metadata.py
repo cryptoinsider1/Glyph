@@ -2,6 +2,7 @@ import tempfile
 from pathlib import Path
 from core.metadata_store import MetadataStore
 
+
 def test_add_and_get():
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "test.db"

@@ -4,12 +4,12 @@
 import json
 import logging
 import logging.handlers
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 import hashlib
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -27,11 +27,13 @@ class JsonFormatter(logging.Formatter):
             log_record.update(record.extra)
         return json.dumps(log_record, ensure_ascii=False)
 
+
 class AuditLogger:
     """Append-only audit log with hash chain for tamper evidence.
-    
+
     Each entry contains previous hash, timestamp, event, payload, and current hash.
     """
+
     def __init__(self, audit_file: Path):
         self.audit_file = audit_file
         self.audit_file.parent.mkdir(parents=True, exist_ok=True)
@@ -60,6 +62,7 @@ class AuditLogger:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
         return entry["hash"]
 
+
 def setup_logger(config: dict) -> logging.Logger:
     log_file = Path(config["logging"]["file"])
     log_level_name = config["logging"]["level"].upper()
@@ -73,14 +76,18 @@ def setup_logger(config: dict) -> logging.Logger:
     if logger.hasHandlers():
         logger.handlers.clear()
 
-    console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    console_formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+    )
     if use_json:
         file_formatter = JsonFormatter()
     else:
-        file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
 
     file_handler = logging.handlers.RotatingFileHandler(
-        log_file, maxBytes=10*1024*1024, backupCount=5, encoding='utf-8'
+        log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
     )
     file_handler.setLevel(log_level)
     file_handler.setFormatter(file_formatter)
