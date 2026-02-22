@@ -7,7 +7,12 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 class ModuleIPC:
-    """Универсальный клиент для вызова внешних модулей."""
+    """Client for calling external modules via JSON over stdin/stdout.
+    
+    Args:
+        module_path (Path): Path to the executable.
+        logger (logging.Logger, optional): Logger instance.
+    """
     def __init__(self, module_path: Path, logger=None):
         self.module_path = module_path.resolve()
         if not self.module_path.exists():
