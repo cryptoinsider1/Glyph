@@ -10,7 +10,7 @@ python-dotenv>=1.0.1,<2.0
 # ======================
 # Crypto (Python-side)
 # ======================
-cryptography>=42.0.5,<43.0
+cryptography>=42.0.5,<46.0.5
 
 # ======================
 # Async / IPC
