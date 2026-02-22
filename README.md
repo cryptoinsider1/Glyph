@@ -26,3 +26,19 @@
    ```bash
    git clone <url>
    cd glyph
+
+## License
+
+This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
+
+## Versioning
+
+We use [SemVer](https://semver.org/) for versioning. For the versions available, see the [CHANGELOG](CHANGELOG.md).
+
+## Documentation
+
+Full documentation is available at [Read the Docs](https://glyph.readthedocs.io/).
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
