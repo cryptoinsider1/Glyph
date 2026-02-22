@@ -204,7 +204,7 @@ def main() -> None:
     # -------------------------
     elif args.command == "verify":
         file_path = Path(args.file).expanduser().resolve()
-        entry = store.get_entry_by_path(str(file_path.relative_to(PROJECT_ROOT)))
+        entry = store.get_entry_by_path(str(file_path))
         if not entry:
             logger.error("Entry not found")
             sys.exit(1)
