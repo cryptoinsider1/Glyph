@@ -21,6 +21,8 @@ venv.bak/
 *.egg-info/
 dist/
 build/
+.env
+.env.local
 
 # Logs
 logs/

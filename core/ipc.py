@@ -19,8 +19,13 @@ class ModuleIPC:
             raise FileNotFoundError(f"Module executable not found: {module_path}")
         self.logger = logger
 
+    MAX_IPC_SIZE = 10 * 1024 * 1024  # 10 MB
+
     def call(self, request: Dict[str, Any], timeout: int = 30) -> Dict[str, Any]:
         """Отправляет JSON-запрос модулю, возвращает JSON-ответ."""
+        data = json.dumps(request)
+        if len(data.encode()) > MAX_IPC_SIZE:
+        raise ValueError(f"IPC payload too large: {len(data)} > {MAX_IPC_SIZE}")
         if self.logger:
             self.logger.debug(f"IPC call to {self.module_path}: {request}")
         try:
